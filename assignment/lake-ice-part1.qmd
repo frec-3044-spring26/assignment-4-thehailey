@@ -18,6 +18,7 @@ The data are in a multi-sheet Excel file named `data/lake_ice_off_data.xlsx`. Yo
 For some reason, `read_excel()` does not like relative paths, so we will use the `here` package to locate your project on your computer. First, install the `here` package.  Then, run the `here()` function to get the path to your project.  Using `file.path()` appends the results of `here()` to the location of the data within your project/GitHub repository.
 
 ```{r}
+library(tidyverse)
 library(here)
 file_name <- file.path(here(),"data/lake_ice_off_data.xlsx")
 ```
@@ -46,7 +47,6 @@ We will practice key skills in the module using a focal lake. Use the `filter` f
 ```{r}
 sunapee <- ice_data |>
   filter(lake_name == "Sunapee")
-sunapee
 ```
 
 You will be using the `sunapee` data for the rest of the module until Question 11
@@ -249,9 +249,35 @@ To answer this question, you need to divide the Sunapee dataset into two dataset
 
 Use the skills developed above to evaluate the question "Is the ice-off day of year changing more quickly in more recent years at Lake Sunapee?"
 
+
 **Answer 12:**
 
 Use a mix of code, figures, and text to present your analysis.  If you want to compare slopes, be sure they are on the same plot.
+
+```{r}
+early <- sunapee |>
+  filter(year < 1970)
+later <- sunapee |>
+  filter(year >= 1970)
+
+sunapee <- sunapee |>
+  mutate(early = ifelse(year < 1970, 0, 1))
+sunapee
+
+fit_early <- lm(ice_off_doy ~ year, data = early)
+summary(fit_early)
+confint(fit_early, level =0.9)
+fit_later <- lm(ice_off_doy ~ year, data = later)
+summary(fit_later)
+confint(fit_later, level = 0.9)
+
+ggplot(data = sunapee, aes(x = year, y = ice_off_doy, color = as.factor(early))) + geom_point() + 
+  geom_segment(aes(x = 1869, y = 120.56882, xend = 1969, yend = 109.60182), color = "red") +
+  geom_segment(aes(x = 1970, y = 116.21327, xend = 2025, yend = 99.58182), color = "blue") + 
+  labs(x = "Year", y = "Ice off Day", title = "Slope for Early Period (Before 1970) and Later Period (After 1970)")
+
+```
+For the early period, the slope was -0.10967 with a p value of 0.00108 showing that we can reject the null hypothesis. However, this slope is fairly flat meaning that prediction in the earlier period would be less meaningful. Since the slope is flatter, it would take a higher number of years for a meaningful decrease in the ice off day. In addition, the R2 is also 0.1027 which means that 90% of the variation is not explained by the regression line. For the later period, the slope was -0.30239 with a p value of 0.000161 showing that we can reject the null hypothesis. This slope is relatively steeper than the one seen for the early period. This means that in this time range the ice off day changes more quickly throughout the years. The R2 is also higher with 23.36 of the variation in the Y explained by the regression. I also computed the confidence interval for the slope for both fits and found that the intervals do not overlap showing that we are 90% confident that the slopes are different for the two fits. This analysis of slopes can also be seen in the graph that after 1970 the slope seems to get steeper. 
 
 # Rendering and committing
 
@@ -265,3 +291,20 @@ This module was initially developed as an Excel-based activity by Carey, C.C., J
 
 Include citation of any AI-generated assistance or discussion with classmates (per policy in syllabus). Proper documentation of AI-generated assistance includes the prompt, the source (e.g., ChatGPT), and the significant parts of the response.  Proper documentation of discussion with classmates include listing their names and the components discussed.  
 
+Model: Gemini3
+Prompt: can you control where the abline starts in r ggplot2
+
+Answer: No, you cannot directly control where geom_abline() starts and ends within ggplot2, as it draws a line that extends to the limits of the plot panel. To draw a line that has specific start and end points, you should use the geom_segment() function instead
+
+
+Using geom_segment()
+
+The geom_segment() function allows you to specify the exact start and end coordinates of a line segment.
+
+x: starting x position
+
+y: starting y position
+
+xend: ending x position
+
+yend: ending y position
