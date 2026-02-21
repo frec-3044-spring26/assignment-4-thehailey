@@ -120,6 +120,7 @@ First, it is important to understand how much variation is explained by the mode
 What is the R2 for the regression? Based on the R2, is `year` and `ice_off_doy` strongly related?
 
 **Answer 4:**
+The R2 for the regression is 20%. Based solely on the R2, year and ice_off_day are not strongly related since the value is closer to 0. The proportion of variability in ice_off_day is only 20% explained by the year. 
 
 ## Residuals normally distributed
 
@@ -151,6 +152,10 @@ Use the [`add_predictions()`](https://modelr.tidyverse.org/reference/add_predict
 **Answer 5:**
 
 ```{r}
+library(modelr)
+sunapee <-add_predictions(sunapee, fit)
+sunapee <- add_residuals(sunapee, fit)
+sunapee
 
 ```
 
@@ -163,9 +168,10 @@ Show Histogram and answer the following question: do the residuals meet the assu
 **Answer 6:**
 
 ```{r}
-
+ggplot(data = sunapee) +
+  geom_histogram(aes(x = residual), bins = 10)
 ```
-
+The histogram seems to be left-skewed which violates the residuals assumption of mean centered around 0. In a normal distribution there should be zero skewness. 
 
 ## The slope is different from zero
 
@@ -176,6 +182,7 @@ A slope could appear to be higher or lower than zero, but the uncertainty in the
 Based on the `summary()` above, what is the p-value for the slope?
 
 **Answer 7:**
+The p value is 0.0000000025.
 
 ## The slope physically meaningful
 
@@ -186,6 +193,7 @@ A slope value could have a low probability of being 0 (thus we have a strong bel
 Based on the slope value, how many more years are needed to pass before the lake has a 1 week change in ice off doy? Do you think this is meaningful? Why?
 
 **Answer 8:**
+Around 65.91/66 years are needed to pass before the lake has a 1 week decrease in ice off day. This is not meaningful since that number is relatively large for only a week difference. 
 
 ## Overall model assessment
 
@@ -194,13 +202,16 @@ Based on the slope value, how many more years are needed to pass before the lake
 How comfortable are you proceeding with using this linear model for additional analysis and prediction? Why? (I am not looking for your gut answer, rather I want you to apply concepts taught in this module to justify your answer)
 
 **Answer 9:**
+Since the model was fitted only on lake Sunapee data using it to predict ice off days for other lakes would yield inaccurate results. However, for further analysis on Lake Sunapee since the p values for the slope are very low this could be used to predict ice off days for upcoming years. Since the R2 value is relatively low I would not be confident on predicted ice off day due to the model missing 80% of the potential variation. 
 
 **Question 10:**
 Now plot the data for Lake Sunapee (just like above - year on x-axis vs. ice of doy on y axis) but add the line from your regression results (e.g., fit intercept and slope). You will use the [`geom_abline`](https://ggplot2.tidyverse.org/reference/geom_abline.html). 
 
 **Answer 10:**
 ```{r}
-
+ggplot(data = sunapee, aes(x = year, y = ice_off_doy)) + geom_line() + geom_point() + 
+  geom_abline(intercept = 318.94856, slope = -0.10602) +
+  labs(x = "Year", y = "Ice off Day", title = "Lake Sunapee Ice Off Day Over Time From 1869-2025")
 ```
 
 **Question 11:**
@@ -215,8 +226,20 @@ The goal of this question is to make a forecast of the future ice-off day (with 
 **Answer 11:**
 
 ```{r}
+predicted <- predict(fit, newdata = data.frame(year = 2040))
+predicted
+quantiles <- quantile(sunapee$resid, probs = c(0.05, 0.95))
+quantiles
+lower <- predicted[1] + quantiles[1]
+lower
+upper <- predicted[1] + quantiles[2]
+upper
+
+width <- lower - upper
+width
 
 ```
+The predicted ice off day for year 2040 is 102.6622 or day 103. The confidence interval is (83.23486, 116.8135) and it is around 33 days wide.
 
 # Is the ice-off day of the year changing more quickly in more recent years at Lake Sunapee?
 
